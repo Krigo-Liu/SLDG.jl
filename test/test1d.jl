@@ -31,7 +31,7 @@ Linf_errors = Float64[]
 for nx in grid_resolutions
     params = SLDG.SimulationParameters(
          nx,            # Number of grid cells.
-         2,             # nk: polynomial degree (solution space has nk+1 nodes).
+         1,             # nk: polynomial degree (solution space has nk+1 nodes).
          6,             # N: number of Gaussian quadrature points.
          0.0,           # xleft.
          2π,            # xright.
