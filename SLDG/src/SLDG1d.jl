@@ -4,6 +4,9 @@ using LinearAlgebra
 using FastGaussQuadrature
 using Debugger
 
+export SimulationParameters, SimulationState 
+export Vertex, EulerianElement, Segment, UpstreamElement
+export sldg1d
 
 # -----------------------------
 # Define custom types
@@ -306,6 +309,8 @@ function get_integral_pk!(up::UpstreamElement, sim::SimulationState)
     gau = gausslegendre(nk + 1)
 
     xi = zeros(nk+1)
+    store_L = zeros(nk+1, nk+1)
+    store_U = zeros(nk+1, nk+1)
     
     # Loop over test function modes: nm = 1,2,...,nk+1.
     for nm in 1:(nk+1)
@@ -366,6 +371,8 @@ function get_integral_pk!(up::UpstreamElement, sim::SimulationState)
                 st += a_1 *
                       ortho_poly1d(aa, gau_t[ig], xc_star, dx_t, nk) *
                       (gau[2][ig]/2)
+                # println(sim.eulerianElements[idx + sim.numberOfGhostCells].umodal, " ", gau_t[ig], " ", sim.x[idx + sim.numberOfGhostCells], " ", sim.dx, " ", nk)
+                # println(a_1)
             end
             # Multiply by the segment length (scaled by the global dx).
             sum_val += st * (up.segment[kk].pend.coor - up.segment[kk].porigin.coor) / sim.dx
@@ -385,10 +392,10 @@ function ortho_poly1d(a, x, xc, dx, k)
     elseif (k == 1)
         return a[1] + a[2] * (x - xc) / dx
     elseif (k == 2)
-        return a[1] + a[2] * (x - xc) / dx + a[3] * (3*(x - xc)^2 - dx^2) / (2*dx^2)
+        return a[1] + a[2] * (x - xc) / dx + a[3] * (((x - xc) / dx)^2 - 1/12)
     elseif (k == 3)
-        return a[1] + a[2] * (x - xc) / dx + a[3] * (3*(x - xc)^2 - dx^2) / (2*dx^2) +
-               a[4] * (5*(x - xc)^3 - 3*dx^2*(x - xc)) / (2*dx^3)
+        return a[1] + a[2] * (x - xc) / dx + a[3] * (((x - xc) / dx)^2 - 1/12) +
+               a[4] * (((x - xc) / dx)^3 - 3/20 * (x - xc) / dx)
     end
     
 end

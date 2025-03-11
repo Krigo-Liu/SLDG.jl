@@ -1,5 +1,5 @@
-include("SLDG1d.jl")
-using .SLDG1d
+include("./src/SLDG.jl")
+using .SLDG
 using Printf
 using LinearAlgebra
 using FastGaussQuadrature
@@ -28,9 +28,9 @@ Linf_errors = Float64[]
 
 
 for nx in grid_resolutions
-    params = SLDG1d.SimulationParameters(
+    params = SLDG.SimulationParameters(
          nx,            # Number of grid cells.
-         1,             # nk: polynomial degree (solution space has nk+1 nodes).
+         2,             # nk: polynomial degree (solution space has nk+1 nodes).
          6,             # N: number of Gaussian quadrature points.
          0.0,           # xleft.
          2π,            # xright.
@@ -42,7 +42,7 @@ for nx in grid_resolutions
 
 
     # Run the solver.
-    solution, grid, er1, er2, er3 = SLDG1d.sldg1d(params, ax, fun_init, exact_function)
+    solution, grid, er1, er2, er3 = SLDG.sldg1d(params, ax, fun_init, exact_function)
 
 
     
