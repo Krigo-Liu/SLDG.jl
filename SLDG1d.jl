@@ -116,7 +116,7 @@ function setup!(sim::SimulationState, parameters::SimulationParameters)
     sim.xGrid = [sim.xleft + (i - 1)*sim.dx for i in (1-sim.numberOfGhostCells):(sim.nx+1+sim.numberOfGhostCells)]
 
     # Allocate vertices (cell boundaries) as Vertex objects.
-    sim.vertices = [Vertex(sim.xleft + (i - 1)*sim.dx, i) for i in 1:(sim.nx+1)]
+    sim.vertices = [Vertex(sim.xleft + (i - 1)*sim.dx, i) for i in (1-sim.numberOfGhostCells):(sim.nx+1+sim.numberOfGhostCells)]
     # Initialize vertex_star as a copy of vertices.
     sim.vertex_star = [Vertex(v.coor, v.id) for v in sim.vertices]
 
@@ -201,7 +201,7 @@ function get_upstream_tn!(sim::SimulationState, ax::Function)
     end
 
     # Step 2: Assemble Gauss–Lobatto nodes for upstream elements.
-    for i in 1:sim.nx
+    for i in 1+sim.numberOfGhostCells:sim.nx+sim.numberOfGhostCells
         up = sim.upstreamElements[i]
         ee = sim.eulerianElements[i]
         # Set first and last upstream Gauss–Lobatto nodes from vertex_star.
@@ -213,7 +213,7 @@ function get_upstream_tn!(sim::SimulationState, ax::Function)
             ee.xgl[end] = sim.vertices[i+1].coor
             # For interior nodes, use a placeholder linear mapping.
             for ii in 2:sim.nk
-                ee.xgl[ii] = ee.xgl[1] + (0.5 + sim.gaussianQuadraturePoints[ii]) * (ee.xgl[end] - ee.xgl[1])
+                ee.xgl[ii] = ee.xgl[1] + (0.5 + gausslobatto(sim.nk+1)[1][ii]/2) * (ee.xgl[end] - ee.xgl[1])
                 up.xgl_star[ii] = runge_kutta(ee.xgl[ii], sim.dt, ax)
             end
         end
@@ -226,8 +226,12 @@ function get_upstream_tn!(sim::SimulationState, ax::Function)
          # Step 4: Compute the modal coefficients via integration.
         
         out_coeffs = get_integral_pk!(up, sim)
+        
+        # if sim.nx == 80
         # println(out_coeffs)
-        ee.umodal .= out_coeffs
+            
+        # end
+        up.umodal .= out_coeffs
     end
 end
 
@@ -235,8 +239,8 @@ end
 # Update the solution by copying upstream modal coefficients to Eulerian elements.
 # -----------------------------
 function update_solution!(sim::SimulationState)
-    for i in 1:sim.nx
-        sim.upstreamElements[i].umodal .= sim.eulerianElements[i].umodal
+    for i in 1+sim.numberOfGhostCells:sim.nx+sim.numberOfGhostCells
+        sim.eulerianElements[i].umodal .= sim.upstreamElements[i].umodal
     end
 end
 
@@ -365,7 +369,7 @@ function get_integral_pk!(up::UpstreamElement, sim::SimulationState)
             end
             # Multiply by the segment length (scaled by the global dx).
             sum_val += st * (up.segment[kk].pend.coor - up.segment[kk].porigin.coor) / sim.dx
-
+            # println(st, " ", up.segment[kk].pend.coor," ", up.segment[kk].porigin.coor)
         end
         
         # Multiply by the appropriate correction coefficient (ai).
@@ -527,12 +531,12 @@ function sldg1d(params::SimulationParameters, ax::Function, fun_init::Function, 
     # Package outputs.
     # Create a matrix (nx x (nk+1)) to hold the modal coefficients from Eulerian elements.
     solution = zeros(sim.nx, sim.nk+1)
-    for i in 1:sim.nx
-        solution[i, :] = sim.eulerianElements[i].umodal
+    for i in 1+sim.numberOfGhostCells:sim.nx+sim.numberOfGhostCells
+        solution[i-sim.numberOfGhostCells, :] = sim.eulerianElements[i].umodal
     end
     
     # Compute cell centers from the vertices.
-    grid = [0.5 * (sim.vertices[i].coor + sim.vertices[i+1].coor) for i in 1:sim.nx]
+    grid = [0.5 * (sim.vertices[i].coor + sim.vertices[i+1].coor) for i in 1+sim.numberOfGhostCells:sim.nx+sim.numberOfGhostCells]
     
     return solution, grid, er1, er2, er3
 end

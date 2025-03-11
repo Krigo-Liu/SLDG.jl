@@ -36,7 +36,7 @@ for nx in grid_resolutions
          2π,            # xright.
          20.0,          # Final time.
          0.1,           # CFL number.
-         2,             # Number of ghost cells.
+         11,             # Number of ghost cells.
          fun_init,      # InitializationFunction.
         )
 
