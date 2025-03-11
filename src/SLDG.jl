@@ -11,8 +11,7 @@ export Vertex, EulerianElement, Segment, UpstreamElement
 export sldg1d
 
 # 动态加载 test1d.jl
-const test1d = let file = joinpath(dirname(@__FILE__), "..", "test", "test1d.jl")
-    eval(Meta.parse(read(file, String)))
-end
+const test1d = Test1d.run
+
 
 end # module SLDG
