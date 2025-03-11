@@ -1,10 +1,11 @@
-include("./src/SLDG.jl")
-using .SLDG
+using Test
+using SLDG
 using Printf
 using LinearAlgebra
 using FastGaussQuadrature
 using Debugger
 
+@testset "SLDG1d Tests " begin
 # Dummy functions for testing
 ax(x) = 1.0
 
@@ -73,4 +74,11 @@ for i in 1:length(grid_resolutions)
         println(@sprintf("%5d & %10s & %8.2f & %10s & %8.2f & %10s & %8.2f \\\\ \\hline", 
             nx, L1_str, rate_L1, L2_str, rate_L2, Linf_str, rate_Linf))
     end
+end
+
+end
+
+# 下面这段代码允许你直接执行 test/test1d.jl 时自动运行测试
+if abspath(PROGRAM_FILE) == @__FILE__
+    println("Running SLDG 1d test")
 end

@@ -8,7 +8,7 @@ export SimulationParameters, SimulationState
 export Vertex, EulerianElement, Segment, UpstreamElement
 export sldg1d
 
-include("test.jl")
-using .test
+include("../test/test1d.jl")
+
 
 end # module SLDG
